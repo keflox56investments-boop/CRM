@@ -1,0 +1,405 @@
+<!doctype html>  
+<html lang="en">  
+<head>  
+  <meta charset="utf-8" />  
+  <meta name="viewport" content="width=device-width,initial-scale=1" />  
+  <title>Caperone Enterprise - CRM & Operations Portal (Prototype)</title>  
+  <meta name="description" content="Prototype front-end for Caperone Enterprise CRM & Operations Portal" />  
+  <!-- Lightweight styling; replace with design system (MUI/Chakra) in implementation -->  
+  <style>  
+    :root{  
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#0ea5a4; --accent-2:#2563eb;  
+      --glass: rgba(255,255,255,0.03);  
+      --success:#10b981; --danger:#ef4444; --surface:#081125; --text:#e6eef6;  
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;  
+    }  
+    *{box-sizing:border-box}  
+    body{margin:0;background:linear-gradient(180deg,#041024 0%, #071226 100%);color:var(--text);min-height:100vh;}  
+    a{color:inherit}  
+    .app{display:flex;min-height:100vh}  
+    /* Sidebar */  
+    .sidebar{  
+      width:260px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));  
+      border-right:1px solid rgba(255,255,255,0.03);padding:20px;display:flex;flex-direction:column;gap:18px;  
+      position:sticky;top:0;height:100vh  
+    }  
+    .brand{display:flex;gap:12px;align-items:center}  
+    .logo{  
+      width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));  
+      display:grid;place-items:center;font-weight:700;font-size:18px;color:white;  
+    }  
+    .brand h1{font-size:16px;margin:0}  
+    nav ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}  
+    nav a{display:flex;gap:12px;align-items:center;padding:10px;border-radius:8px;text-decoration:none;color:var(--muted)}  
+    nav a.active, nav a:hover{background:rgba(255,255,255,0.02);color:var(--text)}  
+    .side-footer{margin-top:auto;font-size:12px;color:var(--muted)}  
+    /* Main content */  
+    .main{flex:1;display:flex;flex-direction:column;min-height:100vh}  
+    .topbar{height:72px;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.02);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}  
+    .search{display:flex;align-items:center;gap:8px;background:var(--glass);padding:8px;border-radius:8px;width:420px}  
+    .search input{background:transparent;border:0;color:var(--text);outline:none;width:100%}  
+    .controls{display:flex;gap:12px;align-items:center}  
+    .btn{background:var(--accent);color:#062022;padding:8px 12px;border-radius:8px;border:0;font-weight:600;cursor:pointer}  
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text)}  
+    .content{padding:20px;display:grid;grid-template-columns:1fr;gap:18px}  
+    .cards{display:flex;gap:12px;flex-wrap:wrap}  
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;flex:1;min-width:220px;box-shadow:0 6px 20px rgba(3,7,18,0.6);border:1px solid rgba(255,255,255,0.02)}  
+    h2{margin:0 0 8px 0;font-size:18px}  
+    p.muted{color:var(--muted);margin:8px 0 0 0;font-size:13px}  
+    table{width:100%;border-collapse:collapse}  
+    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,0.02);text-align:left;font-size:14px}  
+    .table-wrap{background:var(--surface);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}  
+    /* Simple Kanban */  
+    .kanban{display:flex;gap:12px;align-items:flex-start}  
+    .kanban-column{background:rgba(255,255,255,0.01);width:320px;padding:12px;border-radius:10px;min-height:220px}  
+    .task{background:linear-gradient(180deg,#052032,#063049);padding:10px;border-radius:8px;margin-bottom:10px;border-left:4px solid var(--accent-2)}  
+    .muted-sm{color:var(--muted);font-size:13px}  
+    /* Forms & modal */  
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;z-index:50}  
+    .modal{background:linear-gradient(180deg,#071627,#031025);padding:18px;border-radius:12px;min-width:360px;border:1px solid rgba(255,255,255,0.03)}  
+    .form-row{display:flex;gap:8px;margin-bottom:10px}  
+    label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}  
+    input,select,textarea{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px;border-radius:8px;color:var(--text);min-width:0}  
+    .small{font-size:13px;color:var(--muted)}  
+    .role-badge{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.02)}  
+    /* Responsive */  
+    @media (max-width:980px){.sidebar{display:none}.search{width:220px}.kanban{overflow:auto;padding-bottom:8px}}  
+    /* Accessibility focus */  
+    a:focus,button:focus,input:focus,select:focus{outline:3px solid rgba(14,165,164,0.15);outline-offset:2px}  
+  </style>  
+</head>  
+<body>  
+  <div class="app" role="application" aria-label="Caperone Enterprise CRM prototype">  
+    <!-- SIDEBAR -->  
+    <aside class="sidebar" aria-label="Main navigation">  
+      <div class="brand" aria-hidden="false">  
+        <div class="logo" aria-hidden="true">C</div>  
+        <div>  
+          <h1>Caperone Enterprise</h1>  
+          <div class="muted-sm">CRM & Operations Portal</div>  
+        </div>  
+      </div>  
+
+      <nav aria-label="Primary">  
+        <ul>  
+          <li><a href="#" class="nav-link active" data-page="dashboard" tabindex="0">🏠 Dashboard</a></li>  
+          <li><a href="#" class="nav-link" data-page="partners">🤝 Partners</a></li>  
+          <li><a href="#" class="nav-link" data-page="shipments">📦 Shipments</a></li>  
+          <li><a href="#" class="nav-link" data-page="consolidations">🔗 ConsolidationRuns</a></li>  
+          <li><a href="#" class="nav-link" data-page="bookings">🧭 Bookings</a></li>  
+          <li><a href="#" class="nav-link" data-page="documents">📑 Documents</a></li>  
+          <li><a href="#" class="nav-link" data-page="invoices">💳 Invoices</a></li>  
+          <li><a href="#" class="nav-link" data-page="ayulu">🌐 Ayulu Partner Portal</a></li>  
+          <li><a href="#" class="nav-link" data-page="admin">🛠 Admin / RBAC</a></li>  
+        </ul>  
+      </nav>  
+
+      <div class="side-footer">  
+        <div><strong>Contact:</strong></div>  
+        <div class="small">kefloxinvestments56@gmail.com</div>  
+        <div class="small">+254706787860</div>  
+        <div style="margin-top:8px;font-size:12px;color:var(--muted)">Demo prototype — not production-ready</div>  
+      </div>  
+    </aside>  
+
+    <!-- MAIN -->  
+    <main class="main">  
+      <header class="topbar" role="banner">  
+        <div style="display:flex;gap:12px;align-items:center">  
+          <div class="search" role="search" aria-label="Site search">  
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/></svg>  
+            <input id="globalSearch" placeholder="Search shipments, partners, docs..." aria-label="Search" />  
+          </div>  
+          <div class="muted-sm">Region: <span class="small">Global</span></div>  
+        </div>  
+
+        <div class="controls" role="region" aria-label="Top controls">  
+          <select id="roleSelect" aria-label="Current role" title="Switch role (demo)">  
+            <option>Admin</option><option>Operations</option><option>Logistics Coordinator</option><option>Sales/BD</option><option>Finance/Compliance</option><option>Partner Liaison (Ayulu)</option><option>Read-Only</option>  
+          </select>  
+          <button class="btn secondary" id="newBtn">+ New</button>  
+          <button class="btn" id="loginBtn">Login (demo)</button>  
+        </div>  
+      </header>  
+
+      <section class="content" id="pageContent" tabindex="0">  
+        <!-- DASHBOARD PAGE (default) -->  
+        <div id="dashboard" class="page" aria-hidden="false">  
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">  
+            <div>  
+              <h2>Dashboard</h2>  
+              <div class="muted-sm">Overview of shipments, consolidations, and partner KPIs</div>  
+            </div>  
+            <div style="display:flex;gap:10px;align-items:center">  
+              <div class="role-badge" id="currentRoleBadge">Role: Admin</div>  
+            </div>  
+          </div>  
+
+          <div class="cards" style="margin-top:12px">  
+            <div class="card" style="flex:1 1 220px">  
+              <div style="display:flex;justify-content:space-between;align-items:center">  
+                <div>  
+                  <div class="small">Open Consolidations</div>  
+                  <div style="font-size:20px;font-weight:700">14</div>  
+                </div>  
+                <div style="text-align:right">  
+                  <div class="small">On-time</div>  
+                  <div style="color:var(--success);font-weight:700">92%</div>  
+                </div>  
+              </div>  
+              <p class="muted small">Key consolidation windows and ETA adherence. Drill into the consolidations list to view details.</p>  
+            </div>  
+
+            <div class="card" style="flex:1 1 220px">  
+              <div style="display:flex;justify-content:space-between;align-items:center">  
+                <div>  
+                  <div class="small">Active Shipments</div>  
+                  <div style="font-size:20px;font-weight:700">86</div>  
+                </div>  
+                <div style="text-align:right">  
+                  <div class="small">Delayed</div>  
+                  <div style="color:var(--danger);font-weight:700">7</div>  
+                </div>  
+              </div>  
+              <p class="muted small">Shipments across lanes. Use Kanban to manage workflow (Loading → In Transit → Customs → Delivered).</p>  
+            </div>  
+
+            <div class="card" style="flex:1 1 220px">  
+              <div style="display:flex;justify-content:space-between;align-items:center">  
+                <div>  
+                  <div class="small">Outstanding Invoices</div>  
+                  <div style="font-size:20px;font-weight:700">KES 1,254,320</div>  
+                </div>  
+                <div style="text-align:right">  
+                  <div class="small">Due in 30d</div>  
+                  <div style="color:var(--accent);font-weight:700">12</div>  
+                </div>  
+              </div>  
+              <p class="muted small">Finance snapshot for reconciliations. Integrate ERP for automatic sync.</p>  
+            </div>  
+          </div>  
+
+          <div style="display:flex;gap:12px;margin-top:12px;align-items:flex-start">  
+            <div class="card" style="flex:1 1 600px">  
+              <h2 style="margin-bottom:10px">Shipments Kanban</h2>  
+              <div class="kanban" aria-label="Shipments board">  
+                <div class="kanban-column" data-column="loading">  
+                  <h3 style="margin-top:0">Loading</h3>  
+                  <div class="task" tabindex="0"><strong>#SHP-0012</strong><div class="muted-sm">Origin: Mombasa — ETA: 2025-10-20</div></div>  
+                  <div class="task" tabindex="0"><strong>#SHP-0043</strong><div class="muted-sm">Origin: Guangzhou — ETA: 2025-10-22</div></div>  
+                </div>  
+                <div class="kanban-column" data-column="in-transit">  
+                  <h3 style="margin-top:0">In Transit</h3>  
+                  <div class="task" tabindex="0"><strong>#SHP-0056</strong><div class="muted-sm">Carrier: Ayulu Liners — ETA: 2025-10-24</div></div>  
+                </div>  
+                <div class="kanban-column" data-column="customs">  
+                  <h3 style="margin-top:0">Customs</h3>  
+                  <div class="task" tabindex="0"><strong>#SHP-0022</strong><div class="muted-sm">Status: Awaiting Clearance</div></div>  
+                </div>  
+                <div class="kanban-column" data-column="delivered">  
+                  <h3 style="margin-top:0">Delivered</h3>  
+                  <div class="task" tabindex="0"><strong>#SHP-0001</strong><div class="muted-sm">Delivered: 2025-09-16</div></div>  
+                </div>  
+              </div>  
+            </div>  
+
+            <div class="card" style="width:420px;flex:none">  
+              <h2 style="margin-bottom:10px">Recent Activity</h2>  
+              <div class="muted-sm" style="margin-bottom:8px">Feed of important events and audit-worthy actions</div>  
+              <div style="display:flex;flex-direction:column;gap:8px">  
+                <div style="display:flex;gap:10px;align-items:flex-start">  
+                  <div style="width:10px;height:10px;background:var(--accent);border-radius:50%"></div>  
+                  <div>  
+                    <div style="font-weight:700">Booking created <span class="muted-sm">— #BKG-101</span></div>  
+                    <div class="muted-sm">By: Logistics Coordinator — 18:12</div>  
+                  </div>  
+                </div>  
+                <div style="display:flex;gap:10px;align-items:flex-start">  
+                  <div style="width:10px;height:10px;background:var(--success);border-radius:50%"></div>  
+                  <div>  
+                    <div style="font-weight:700">Invoice Paid <span class="muted-sm">— #INV-220</span></div>  
+                    <div class="muted-sm">By: Finance — 11:01</div>  
+                  </div>  
+                </div>  
+                <div style="display:flex;gap:10px;align-items:flex-start">  
+                  <div style="width:10px;height:10px;background:var(--danger);border-radius:50%"></div>  
+                  <div>  
+                    <div style="font-weight:700">Customs hold <span class="muted-sm">— #SHP-0022</span></div>  
+                    <div class="muted-sm">By: Customs — 09:44</div>  
+                  </div>  
+                </div>  
+              </div>  
+            </div>  
+          </div>  
+
+        </div>  
+
+        <!-- PARTNERS PAGE -->  
+        <div id="partners" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div><h2>Partners & Accounts</h2><div class="muted-sm">Manage partners, assign liaison, track KPIs</div></div>  
+            <div style="display:flex;gap:8px">  
+              <button class="btn" onclick="openModal('partnerModal')">+ New Partner</button>  
+            </div>  
+          </div>  
+
+          <div class="table-wrap" style="margin-top:12px">  
+            <table aria-describedby="partnersTable">  
+              <thead>  
+                <tr><th>Partner</th><th>Type</th><th>Contact</th><th>Assigned Liaison</th><th>KPIs</th></tr>  
+              </thead>  
+              <tbody id="partnersTbody">  
+                <!-- populated by JS -->  
+              </tbody>  
+            </table>  
+          </div>  
+        </div>  
+
+        <!-- SHIPMENTS PAGE -->  
+        <div id="shipments" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div><h2>Shipments</h2><div class="muted-sm">Create and link shipments to consolidations, track HS codes</div></div>  
+            <div style="display:flex;gap:8px">  
+              <button class="btn" onclick="openModal('shipmentModal')">+ New Shipment</button>  
+              <button class="btn secondary" onclick="showKanban()">Open Full Kanban</button>  
+            </div>  
+          </div>  
+
+          <div class="table-wrap" style="margin-top:12px">  
+            <table aria-describedby="shipmentsTable">  
+              <thead>  
+                <tr><th>Ref</th><th>Origin</th><th>Destination</th><th>HS Codes</th><th>Status</th></tr>  
+              </thead>  
+              <tbody id="shipmentsTbody"></tbody>  
+            </table>  
+          </div>  
+        </div>  
+
+        <!-- CONSOLIDATIONS PAGE -->  
+        <div id="consolidations" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div><h2>ConsolidationRuns</h2><div class="muted-sm">Group shipments, define windows and track statuses</div></div>  
+            <div style="display:flex;gap:8px">  
+              <button class="btn" onclick="openModal('consolidationModal')">+ New ConsolidationRun</button>  
+            </div>  
+          </div>  
+
+          <div class="table-wrap" style="margin-top:12px">  
+            <table>  
+              <thead><tr><th>ID</th><th>Window</th><th># Shipments</th><th>Status</th></tr></thead>  
+              <tbody id="consolidationsTbody"></tbody>  
+            </table>  
+          </div>  
+        </div>  
+
+        <!-- BOOKINGS PAGE -->  
+        <div id="bookings" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div><h2>Carrier Bookings</h2><div class="muted-sm">Manage carrier schedules, ETD/ETA, voyage details and costs</div></div>  
+            <div style="display:flex;gap:8px">  
+              <button class="btn" onclick="openModal('bookingModal')">+ New Booking</button>  
+            </div>  
+          </div>  
+
+          <div class="table-wrap" style="margin-top:12px">  
+            <table>  
+              <thead><tr><th>Booking</th><th>Carrier</th><th>Voyage</th><th>ETD / ETA</th><th>Cost</th></tr></thead>  
+              <tbody id="bookingsTbody"></tbody>  
+            </table>  
+          </div>  
+        </div>  
+
+        <!-- DOCUMENTS PAGE -->  
+        <div id="documents" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div><h2>Documents</h2><div class="muted-sm">Upload, categorize, and link documents to shipments and consolidations</div></div>  
+            <div style="display:flex;gap:8px">  
+              <button class="btn" onclick="openModal('documentModal')">+ Upload Document</button>  
+            </div>  
+          </div>  
+
+          <div class="table-wrap" style="margin-top:12px">  
+            <table>  
+              <thead><tr><th>Name</th><th>Type</th><th>Linked To</th><th>Uploaded</th></tr></thead>  
+              <tbody id="documentsTbody"></tbody>  
+            </table>  
+          </div>  
+        </div>  
+
+        <!-- INVOICES PAGE -->  
+        <div id="invoices" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div><h2>Invoices</h2><div class="muted-sm">Tie invoices to shipments/consolidations; basic workflow</div></div>  
+            <div style="display:flex;gap:8px">  
+              <button class="btn" onclick="openModal('invoiceModal')">+ New Invoice</button>  
+            </div>  
+          </div>  
+
+          <div class="table-wrap" style="margin-top:12px">  
+            <table>  
+              <thead><tr><th>Invoice</th><th>Amount</th><th>Linked</th><th>Status</th></tr></thead>  
+              <tbody id="invoicesTbody"></tbody>  
+            </table>  
+          </div>  
+        </div>  
+
+        <!-- AYULU PARTNER PORTAL VIEW -->  
+        <div id="ayulu" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div>  
+              <h2>Ayulu Partner Portal</h2>  
+              <div class="muted-sm">Shared KPIs, shipments, finance overview (Ayulu-branded)</div>  
+            </div>  
+            <div><span class="role-badge">Partner: Ayulu Consolidators</span></div>  
+          </div>  
+
+          <div class="cards" style="margin-top:12px">  
+            <div class="card">  
+              <h3>Shared KPI: Consolidation Efficiency</h3>  
+              <div style="display:flex;gap:12px;align-items:center">  
+                <div style="font-size:24px;font-weight:700">88%</div>  
+                <div class="muted-sm">On-time consolidation closures</div>  
+              </div>  
+            </div>  
+
+            <div class="card">  
+              <h3>Financial Summary (Ayulu)</h3>  
+              <div style="font-weight:700">KES 820,400 outstanding</div>  
+              <div class="muted-sm">Invoices: 8 open</div>  
+            </div>  
+
+            <div class="card">  
+              <h3>Recent Joint Shipments</h3>  
+              <ul style="margin:6px 0 0 18px">  
+                <li>#SHP-0056 — ETA 2025-10-24 — Carrier: Ayulu Liners</li>  
+                <li>#SHP-0078 — ETA 2025-10-28 — Carrier: Ayulu Liners</li>  
+              </ul>  
+            </div>  
+          </div>  
+        </div>  
+
+        <!-- ADMIN / RBAC PAGE -->  
+        <div id="admin" class="page" aria-hidden="true">  
+          <div style="display:flex;justify-content:space-between;align-items:center">  
+            <div><h2>Admin & RBAC</h2><div class="muted-sm">Manage roles, permissions and audit logs (demo)</div></div>  
+          </div>  
+
+          <div style="margin-top:12px;display:flex;gap:12px;align-items:flex-start">  
+            <div class="card" style="flex:1">  
+              <h3>Role Management (Demo)</h3>  
+              <div class="muted-sm">Switch role using the top-right selector. In production: manage roles, assign field-level permissions, and invite partners.</div>  
+              <div style="margin-top:10px">  
+                <label for="newRole">Create role</label>  
+                <input id="newRole" placeholder="Role name (e.g., Customs Officer)" />  
+                <div style="margin-top:8px"><button class="btn" onclick="createRole()">Create Role</button></div>  
+              </div>  
+            </div>  
+
+            <div class="card" style="flex:1">  
+              <h3>Audit Log (Sample)</h3>  
+              <div class="muted-sm">Critical actions are logged with actor, timestamp, and details.</div>  
+              <div style="margin-top:8px">  
+                <table>  
+                  <thead><tr><th>Time</th><th>Actor</th><th>Action</th></tr></thead>  
+                  <tbody>  
+                    <tr><td>2025-09-20 18:12</td><td>admin</td
